@@ -4,8 +4,9 @@ beautifulsoup4
 google-generativeai
 pandas
 openpyxl
-selenium
 rapidfuzz
+selenium==4.8.0
+chromedriver-autoinstaller==0.2.2
 
 
 
