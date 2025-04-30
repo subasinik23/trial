@@ -47,7 +47,7 @@ def get_chrome_driver():
         # Use Service if specifying path, otherwise let it find chromedriver in PATH
         # service = Service(CHROME_DRIVER_PATH if 'CHROME_DRIVER_PATH' in globals() and CHROME_DRIVER_PATH else None)
         # Note: Let selenium-manager handle driver download/detection if not specified
-        driver = webdriver.Chrome(service=Service(shutil.which("chromedriver")), options=chrome_options)
+        driver = webdriver.Chrome(options=options)
         return driver
     except Exception as e:
         st.error(f"Could not initialize Selenium WebDriver. Make sure ChromeDriver is installed and in your system's PATH. Error: {e}")
