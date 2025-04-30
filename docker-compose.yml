@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  scraper-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./:/app
+    restart: unless-stopped
