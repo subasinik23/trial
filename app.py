@@ -8,6 +8,7 @@ from io import BytesIO
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
 from rapidfuzz import fuzz, process
@@ -34,10 +35,6 @@ def get_chrome_driver():
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--window-size=1920x1080')
-    options.add_argument('--disable-extensions')
-    options.add_argument('--disable-blink-features=AutomationControlled')
 
     # Detect paths dynamically
     chrome_path = shutil.which("chromium") or shutil.which("chromium-browser")
@@ -48,7 +45,7 @@ def get_chrome_driver():
 
     try:
         service = Service(chromedriver_path)
-        driver = webdriver.Chrome(service=service, options=options)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         return driver
     except Exception as e:
         st.error(f"Could not initialize Selenium WebDriver: {e}")
