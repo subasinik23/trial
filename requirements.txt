@@ -7,6 +7,4 @@ openpyxl
 rapidfuzz
 selenium==4.8.0
 chromedriver-autoinstaller==0.2.2
-
-
-
+webdriver-manager 
