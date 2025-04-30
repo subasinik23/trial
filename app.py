@@ -22,36 +22,36 @@ DEFAULT_VERY_HIGH_NAME_THRESHOLD = 95 # Threshold for considering names 'very si
 # Global variable for driver path (optional, if not in PATH)
 # CHROME_DRIVER_PATH = "/path/to/chromedriver" # Uncomment and set if needed
 
+import shutil
+
 @st.cache_resource
 def get_chrome_driver():
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.chrome.service import Service
+
     options = Options()
     options.add_argument('--headless')
-    options.add_argument('--no-sandbox') # Recommended for headless in some environments
-    options.add_argument('--disable-dev-shm-usage') # Recommended for headless
-    options.add_argument('--disable-gpu') # Might be necessary in some environments
-    options.add_argument('--window-size=1920x1080') # Good standard size
-    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=1920x1080')
     options.add_argument('--disable-extensions')
-    # Add a user agent to avoid detection
-    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
-    options.add_argument('--log-level=3') # Suppress excessive logs
-    options.add_experimental_option('excludeSwitches', ['enable-logging']) # Suppress Chrome log messages
+    options.add_argument('--disable-blink-features=AutomationControlled')
 
-    # Use pre-installed Chrome/driver path if available (e.g. on Streamlit Community Cloud)
-    # Or ensure chromedriver is in PATH
-    chrome_binary_location = os.environ.get("CHROME_BINARY_LOCATION")
-    if chrome_binary_location:
-         options.binary_location = chrome_binary_location
+    # Detect paths dynamically
+    chrome_path = shutil.which("chromium") or shutil.which("chromium-browser")
+    chromedriver_path = shutil.which("chromedriver")
+
+    if chrome_path:
+        options.binary_location = chrome_path
 
     try:
-        # Use Service if specifying path, otherwise let it find chromedriver in PATH
-        # service = Service(CHROME_DRIVER_PATH if 'CHROME_DRIVER_PATH' in globals() and CHROME_DRIVER_PATH else None)
-        # Note: Let selenium-manager handle driver download/detection if not specified
-        driver = webdriver.Chrome(options=options)
+        service = Service(chromedriver_path)
+        driver = webdriver.Chrome(service=service, options=options)
         return driver
     except Exception as e:
-        st.error(f"Could not initialize Selenium WebDriver. Make sure ChromeDriver is installed and in your system's PATH. Error: {e}")
-        st.info("See https://chromedriver.chromium.org/downloads for installation or check environment variables for deployment.")
+        st.error(f"Could not initialize Selenium WebDriver: {e}")
         st.text(traceback.format_exc())
         return None
 
