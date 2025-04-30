@@ -13,42 +13,58 @@ import time
 import os
 from rapidfuzz import fuzz, process
 import traceback
+from dotenv import load_dotenv
+
+# Load environment variables from .env file if present
+load_dotenv()
 
 # --- Default Comparison Thresholds (Fixed as requested) ---
 DEFAULT_ITEM_NAME_THRESHOLD = 90
 DEFAULT_CATEGORY_THRESHOLD = 90
-DEFAULT_VERY_HIGH_NAME_THRESHOLD = 95 # Threshold for considering names 'very similar'
+DEFAULT_VERY_HIGH_NAME_THRESHOLD = 95  # Threshold for considering names 'very similar'
 
 # --- Selenium Setup (for dynamic content) ---
-# Global variable for driver path (optional, if not in PATH)
-# CHROME_DRIVER_PATH = "/path/to/chromedriver" # Uncomment and set if needed
-
-import shutil
-
 @st.cache_resource
 def get_chrome_driver():
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.chrome.service import Service
-
+    """
+    Initialize and configure a headless Chrome WebDriver for server deployment.
+    This function is cached by Streamlit to reuse the driver across reruns.
+    """
+    st.info("Initializing Chrome WebDriver...")
     options = Options()
     options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--no-sandbox')  # Required for Docker/Linux environments
+    options.add_argument('--disable-dev-shm-usage')  # Handle limited shared memory
+    options.add_argument('--disable-gpu')  # Often necessary in headless mode
+    options.add_argument('--window-size=1920x1080')  # Set standard viewport
+    options.add_argument('--ignore-certificate-errors')  # Handle SSL issues
+    options.add_argument('--disable-extensions')  # Disable extensions for performance
+    
+    # Add user agent to avoid detection
+    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+    
+    # Reduce logging verbosity
+    options.add_argument('--log-level=3')
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
-    # Detect paths dynamically
-    chrome_path = shutil.which("chromium") or shutil.which("chromium-browser")
-    chromedriver_path = shutil.which("chromedriver")
-
-    if chrome_path:
-        options.binary_location = chrome_path
+    # Check for environment variable pointing to Chrome binary
+    chrome_binary_location = os.environ.get("CHROME_BINARY_LOCATION")
+    if chrome_binary_location:
+        st.info(f"Using Chrome binary from environment: {chrome_binary_location}")
+        options.binary_location = chrome_binary_location
 
     try:
-        service = Service(chromedriver_path)
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        # Use ChromeDriverManager to automatically download and manage ChromeDriver
+        # This is more reliable across different environments and Chrome versions
+        driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()),
+            options=options
+        )
+        st.success("Chrome WebDriver initialized successfully")
         return driver
     except Exception as e:
-        st.error(f"Could not initialize Selenium WebDriver: {e}")
+        st.error(f"Could not initialize Chrome WebDriver: {e}")
+        st.info("Make sure ChromeDriver is compatible with your Chrome version.")
         st.text(traceback.format_exc())
         return None
 
